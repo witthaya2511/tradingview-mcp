@@ -217,7 +217,19 @@ Claude reads [`CLAUDE.md`](CLAUDE.md) automatically when working in this project
 | "Draw a level at 24500" | `draw_shape` (horizontal_line) |
 | "Take a screenshot" | `capture_screenshot` |
 
-## Tool Reference (78 MCP tools)
+## Tool Reference
+
+### TFEX analysis (decision support only)
+
+| Tool | Description |
+|------|-------------|
+| `tfex_analyze` | LONG / SHORT / WAIT decision using 15m + 1H by default, plus regime and ATR risk plan |
+| `tfex_market_regime` | Classify BULL / BEAR / SIDEWAYS / HIGH_VOLATILITY |
+| `tfex_mtf_signal` | Combine weighted signals across chart timeframes |
+| `tfex_strategy_report` | Assess Strategy Tester win rate, profit factor, drawdown, and sample size |
+| `tfex_risk_plan` | Produce entry, stop, TP1, TP2, and risk/reward levels from ATR |
+
+These tools analyze chart data and never place orders.
 
 ### Chart Reading
 
