@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeBars, buildRiskPlan, classifyMarketRegime, combineMtf, summarizeStrategy } from '../src/core/tfex.js';
+import { DEFAULT_TFEX_TIMEFRAMES, analyzeBars, buildRiskPlan, classifyMarketRegime, combineMtf, summarizeStrategy } from '../src/core/tfex.js';
 
 function bars(direction = 1, volatility = 1) {
   return Array.from({ length: 80 }, (_, index) => {
@@ -10,6 +10,10 @@ function bars(direction = 1, volatility = 1) {
 }
 
 describe('TFEX analysis', () => {
+  it('uses 15m, 1H, and 4H as the default timeframe stack', () => {
+    assert.deepEqual(DEFAULT_TFEX_TIMEFRAMES, ['15', '60', '240']);
+  });
+
   it('identifies bullish and bearish trends', () => {
     assert.equal(analyzeBars(bars(1), '15').signal, 'LONG');
     assert.equal(analyzeBars(bars(-1), '15').signal, 'SHORT');

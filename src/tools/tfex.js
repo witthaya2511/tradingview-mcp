@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { jsonResult } from './_format.js';
 import * as core from '../core/tfex.js';
 
-const timeframes = z.array(z.string()).optional().describe('Timeframes from lower to higher priority (default: ["15", "60"])');
+const timeframes = z.array(z.string()).optional().describe('Timeframes from lower to higher priority (default: ["15", "60", "240"] for 15m + 1H + 4H)');
 const count = z.coerce.number().min(36).max(500).optional().describe('Bars per timeframe (default 120, min 36, max 500)');
 
 function tool(server, name, description, schema, handler) {

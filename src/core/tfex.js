@@ -6,6 +6,7 @@ import * as data from './data.js';
 
 const round = (value, digits = 2) => value == null ? null : Number(value.toFixed(digits));
 const mean = (values) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+export const DEFAULT_TFEX_TIMEFRAMES = Object.freeze(['15', '60', '240']);
 
 function ema(values, length) {
   if (!values.length) return null;
@@ -149,7 +150,7 @@ async function loadFrame(timeframe, count = 120) {
   return analyzeBars(result.bars, timeframe);
 }
 
-export async function mtfSignal({ timeframes = ['15', '60'], count = 120 } = {}) {
+export async function mtfSignal({ timeframes = DEFAULT_TFEX_TIMEFRAMES, count = 120 } = {}) {
   const initial = await chart.getState();
   const frames = [];
   try {

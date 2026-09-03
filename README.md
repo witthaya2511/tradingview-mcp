@@ -223,7 +223,7 @@ Claude reads [`CLAUDE.md`](CLAUDE.md) automatically when working in this project
 
 | Tool | Description |
 |------|-------------|
-| `tfex_analyze` | LONG / SHORT / WAIT decision using 15m + 1H by default, plus regime and ATR risk plan |
+| `tfex_analyze` | LONG / SHORT / WAIT decision using 15m + 1H + 4H by default, plus regime and ATR risk plan |
 | `tfex_market_regime` | Classify BULL / BEAR / SIDEWAYS / HIGH_VOLATILITY |
 | `tfex_mtf_signal` | Combine weighted signals across chart timeframes |
 | `tfex_strategy_report` | Assess Strategy Tester win rate, profit factor, drawdown, and sample size |
