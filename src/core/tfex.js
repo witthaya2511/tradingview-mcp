@@ -56,6 +56,63 @@ function atr(bars, length = 14) {
   return mean(ranges);
 }
 
+function midpoint(bars) {
+  return (Math.max(...bars.map(bar => bar.high)) + Math.min(...bars.map(bar => bar.low))) / 2;
+}
+
+export function ichimokuLevels(bars) {
+  if (!Array.isArray(bars) || bars.length < 52) return null;
+  const conversion = midpoint(bars.slice(-9));
+  const base = midpoint(bars.slice(-26));
+  const spanA = (conversion + base) / 2;
+  const spanB = midpoint(bars.slice(-52));
+  return {
+    conversion: round(conversion),
+    base: round(base),
+    span_a: round(spanA),
+    span_b: round(spanB),
+    cloud_top: round(Math.max(spanA, spanB)),
+    cloud_bottom: round(Math.min(spanA, spanB)),
+  };
+}
+
+export function volumeProfile(bars, bucketCount = 24, valueAreaPercent = 0.7) {
+  if (!Array.isArray(bars) || !bars.length) return null;
+  const low = Math.min(...bars.map(bar => bar.low));
+  const high = Math.max(...bars.map(bar => bar.high));
+  const step = (high - low) / bucketCount;
+  if (!Number.isFinite(step) || step <= 0) return null;
+  const buckets = Array.from({ length: bucketCount }, (_, index) => ({
+    price: low + step * (index + 0.5),
+    volume: 0,
+    index,
+  }));
+  for (const bar of bars) {
+    const typicalPrice = (bar.high + bar.low + bar.close) / 3;
+    const index = Math.max(0, Math.min(bucketCount - 1, Math.floor((typicalPrice - low) / step)));
+    buckets[index].volume += Number(bar.volume) || 0;
+  }
+  const poc = buckets.reduce((best, bucket) => bucket.volume > best.volume ? bucket : best, buckets[0]);
+  const totalVolume = buckets.reduce((sum, bucket) => sum + bucket.volume, 0);
+  const targetVolume = totalVolume * valueAreaPercent;
+  let includedVolume = poc.volume;
+  let lower = poc.index;
+  let upper = poc.index;
+  while (includedVolume < targetVolume && (lower > 0 || upper < buckets.length - 1)) {
+    const lowerVolume = lower > 0 ? buckets[lower - 1].volume : -1;
+    const upperVolume = upper < buckets.length - 1 ? buckets[upper + 1].volume : -1;
+    if (upperVolume >= lowerVolume) includedVolume += buckets[++upper].volume;
+    else includedVolume += buckets[--lower].volume;
+  }
+  return {
+    poc: round(poc.price),
+    value_area_high: round(low + step * (upper + 1)),
+    value_area_low: round(low + step * lower),
+    value_area_percent: Math.round(valueAreaPercent * 100),
+    buckets: bucketCount,
+  };
+}
+
 export function analyzeBars(bars, timeframe = null) {
   if (!Array.isArray(bars) || bars.length < 36) throw new Error('TFEX analysis requires at least 36 OHLCV bars.');
   const closes = bars.map(bar => Number(bar.close));
@@ -72,6 +129,8 @@ export function analyzeBars(bars, timeframe = null) {
   const oscillator = stochRsi(closes);
   const baselineVolume = mean(bars.slice(-21, -1).map(bar => Number(bar.volume) || 0));
   const volumeRatio = baselineVolume ? (Number(last.volume) || 0) / baselineVolume : null;
+  const ichimoku = ichimokuLevels(bars);
+  const profile = volumeProfile(bars);
   let score = 0;
   const evidence = [];
   if (fast > slow) { score += 30; evidence.push('EMA 5 is above EMA 35'); }
@@ -85,6 +144,28 @@ export function analyzeBars(bars, timeframe = null) {
     else if (oscillator <= 45 && oscillator >= 10) score -= 15;
   }
   if (volumeRatio != null && volumeRatio >= 1.2) score += Math.sign(score || (last.close - last.open)) * 10;
+  if (ichimoku) {
+    if (last.close > ichimoku.cloud_top && ichimoku.conversion > ichimoku.base) {
+      score += 20;
+      evidence.push('Price is above the Ichimoku cloud with Conversion above Base');
+    } else if (last.close < ichimoku.cloud_bottom && ichimoku.conversion < ichimoku.base) {
+      score -= 20;
+      evidence.push('Price is below the Ichimoku cloud with Conversion below Base');
+    } else {
+      evidence.push('Ichimoku confirmation is mixed');
+    }
+  }
+  if (profile) {
+    if (last.close > profile.value_area_high) {
+      score += 10;
+      evidence.push('Price is above the Volume Profile value area');
+    } else if (last.close < profile.value_area_low) {
+      score -= 10;
+      evidence.push('Price is below the Volume Profile value area');
+    } else {
+      evidence.push('Price is inside the Volume Profile value area');
+    }
+  }
   score = Math.max(-100, Math.min(100, score));
   const signal = score >= 35 ? 'LONG' : score <= -35 ? 'SHORT' : 'WAIT';
   return {
@@ -93,7 +174,7 @@ export function analyzeBars(bars, timeframe = null) {
     score,
     confidence: Math.min(95, 50 + Math.round(Math.abs(score) * 0.45)),
     price: last.close,
-    indicators: { ema_5: round(fast), ema_35: round(slow), stoch_rsi: round(oscillator), atr_14: round(atr(bars)), volume_ratio: round(volumeRatio) },
+    indicators: { ema_5: round(fast), ema_35: round(slow), stoch_rsi: round(oscillator), atr_14: round(atr(bars)), volume_ratio: round(volumeRatio), ichimoku, volume_profile: profile },
     price_structure: structure,
     evidence,
   };

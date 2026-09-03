@@ -231,6 +231,9 @@ Claude reads [`CLAUDE.md`](CLAUDE.md) automatically when working in this project
 
 These tools analyze chart data and never place orders.
 
+The TFEX score combines EMA 5/35, Stoch RSI, price structure, relative volume,
+Ichimoku (9/26/52), and a computed 70% Volume Profile value area with POC/VAH/VAL.
+
 ### Chart Reading
 
 | Tool | When to use | Output size |
