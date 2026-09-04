@@ -223,13 +223,16 @@ Claude reads [`CLAUDE.md`](CLAUDE.md) automatically when working in this project
 
 | Tool | Description |
 |------|-------------|
-| `tfex_analyze` | LONG / SHORT / WAIT decision using 15m + 1H by default, plus regime and ATR risk plan |
+| `tfex_analyze` | LONG / SHORT / WAIT decision using 15m + 1H + 4H by default, plus regime and ATR risk plan |
 | `tfex_market_regime` | Classify BULL / BEAR / SIDEWAYS / HIGH_VOLATILITY |
 | `tfex_mtf_signal` | Combine weighted signals across chart timeframes |
 | `tfex_strategy_report` | Assess Strategy Tester win rate, profit factor, drawdown, and sample size |
 | `tfex_risk_plan` | Produce entry, stop, TP1, TP2, and risk/reward levels from ATR |
 
 These tools analyze chart data and never place orders.
+
+The TFEX score combines EMA 5/35, Stoch RSI, price structure, relative volume,
+Ichimoku (9/26/52), and a computed 70% Volume Profile value area with POC/VAH/VAL.
 
 ### Chart Reading
 

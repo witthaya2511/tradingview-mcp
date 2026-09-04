@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { analyzeBars, buildRiskPlan, classifyMarketRegime, combineMtf, summarizeStrategy } from '../src/core/tfex.js';
+import { DEFAULT_TFEX_TIMEFRAMES, analyzeBars, buildRiskPlan, classifyMarketRegime, combineMtf, ichimokuLevels, summarizeStrategy, volumeProfile } from '../src/core/tfex.js';
 
 function bars(direction = 1, volatility = 1) {
   return Array.from({ length: 80 }, (_, index) => {
@@ -10,6 +10,23 @@ function bars(direction = 1, volatility = 1) {
 }
 
 describe('TFEX analysis', () => {
+  it('uses 15m, 1H, and 4H as the default timeframe stack', () => {
+    assert.deepEqual(DEFAULT_TFEX_TIMEFRAMES, ['15', '60', '240']);
+  });
+
+  it('calculates Ichimoku cloud levels from OHLCV bars', () => {
+    const levels = ichimokuLevels(bars(1));
+    assert.ok(levels.conversion > levels.base);
+    assert.equal(levels.cloud_top, Math.max(levels.span_a, levels.span_b));
+  });
+
+  it('calculates Volume Profile POC and 70% value area', () => {
+    const profile = volumeProfile(bars(1));
+    assert.ok(profile.value_area_low <= profile.poc);
+    assert.ok(profile.poc <= profile.value_area_high);
+    assert.equal(profile.value_area_percent, 70);
+  });
+
   it('identifies bullish and bearish trends', () => {
     assert.equal(analyzeBars(bars(1), '15').signal, 'LONG');
     assert.equal(analyzeBars(bars(-1), '15').signal, 'SHORT');
